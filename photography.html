@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#010403">
+  <title>Adrian Wang | Street Photography</title>
+  <meta name="description" content="Street photography by Adrian Wang.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #030907;
+      --deep: #010403;
+      --panel: #10302A;
+      --surface: #1D4C43;
+      --border: #2F665C;
+      --text: #F3FCF8;
+      --muted: #A9D3C8;
+      --teal: #6FD3C0;
+      --mint: #B8F8DD;
+      --butter: #FFF4B1;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html {
+      background: var(--bg);
+      font-size: clamp(14px, min(0.4vw + 10.5px, 1.5vh + 4px), 19px);
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+      font-size: 1.0625rem;
+      line-height: 1.6;
+    }
+    a { color: var(--mint); text-underline-offset: 3px; }
+    a:hover { color: var(--butter); }
+    :focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
+
+    .wrap { max-width: 96rem; margin: 0 auto; padding: 0 clamp(1rem, 3vw, 3rem); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(1, 4, 3, 0.92);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 3.25rem;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+    }
+    .topbar .name { color: var(--text); font-weight: 700; text-decoration: none; }
+    .topbar .back { color: var(--muted); text-decoration: none; }
+    .topbar .back:hover { color: var(--mint); }
+
+    header.page { padding: 3rem 0 1.75rem; }
+    header.page h1 {
+      margin: 0 0 0.5rem;
+      font-family: var(--mono);
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    header.page p { margin: 0; color: var(--muted); max-width: 40rem; }
+    .count { font-family: var(--mono); font-size: 0.8rem; color: var(--butter); margin-top: 0.75rem !important; }
+
+    /* Masonry grid: photos keep their own shape */
+    .gallery { columns: 3 15rem; column-gap: clamp(6px, 0.8vw, 12px); padding-bottom: 4rem; }
+    .gallery figure { margin: 0 0 clamp(6px, 0.8vw, 12px); break-inside: avoid; }
+    .gallery button {
+      position: relative;
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: var(--panel);
+      cursor: zoom-in;
+      overflow: hidden;
+    }
+    .gallery img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: transform 0.5s ease, filter 1.6s ease-out;
+    }
+    .gallery button:hover img, .gallery button:focus-visible img { transform: scale(1.04); }
+    .gallery img.negative { filter: invert(1) hue-rotate(180deg) contrast(0.9); }
+    .gallery button::after {
+      --c: var(--mint);
+      --len: 16px;
+      --w: 2px;
+      content: "";
+      position: absolute;
+      inset: 16px;
+      opacity: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(var(--c), var(--c)) top left / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) top left / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) top right / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) top right / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) bottom left / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) bottom right / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--len);
+      background-repeat: no-repeat;
+      transition: inset 0.25s ease-out, opacity 0.2s;
+    }
+    .gallery button:hover::after, .gallery button:focus-visible::after { opacity: 1; inset: 10px; }
+    .gallery figure.target button { outline: 2px solid var(--butter); outline-offset: 3px; }
+
+    /* Viewer: scroll or pinch to zoom, drag to pan */
+    .viewer {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: contain;
+      background: var(--deep);
+    }
+    .viewer.open { display: grid; }
+    .viewer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .viewer-bar .pos { color: var(--butter); }
+    .viewer-bar .tools { display: flex; align-items: center; gap: 0.4rem; }
+    .vbtn.zoom-level { min-width: 4.2rem; text-align: center; }
+    .viewer-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0 clamp(3.5rem, 6vw, 5rem);
+      touch-action: none;       /* we handle pinch and drag ourselves */
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: zoom-in;
+    }
+    .viewer-stage.zoomed { cursor: grab; }
+    .viewer-stage.dragging { cursor: grabbing; }
+    .viewer-stage img { pointer-events: none; }
+    .viewer-stage img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      flex: none;
+      transform-origin: center center;
+      will-change: transform;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      -webkit-user-drag: none;
+      user-drag: none;
+    }
+    .viewer-stage.animate img { transition: transform 0.2s ease-out; }
+    .viewer-caption {
+      margin: 0;
+      min-height: 3rem;
+      padding: 0.75rem 1rem 1.5rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .vbtn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--mint);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+    }
+    .vbtn:hover { color: var(--butter); border-color: var(--butter); }
+    .nav {
+      position: absolute;
+      z-index: 4;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      font-size: 1.1rem;
+      background: rgba(1, 4, 3, 0.7);
+    }
+    .nav.prev { left: 0.5rem; }
+    .nav.next { right: 0.5rem; }
+
+    @media (max-width: 560px) {
+      .gallery { columns: 2; column-gap: 6px; }
+      .gallery figure { margin-bottom: 6px; }
+      .viewer-stage { padding: 0 0.5rem; }
+      .nav { top: auto; bottom: 0.75rem; transform: none; }
+      .viewer-caption { padding-left: 3.75rem; padding-right: 3.75rem; min-height: 3rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gallery img, .gallery button::after { transition: none; }
+      .gallery button:hover img { transform: none; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--deep);
+      color: var(--muted);
+      padding: 1.5rem 0;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="wrap">
+      <a class="name" href="index.html">Adrian Wang</a>
+      <a class="back" href="index.html#outside">Back to site</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <header class="page">
+      <h1>Street Photography</h1>
+      <p>People and places, mostly in Japan. Select a photo to view it full size.</p>
+      <p class="count" aria-hidden="true"></p>
+    </header>
+
+    <!-- Each photo's id is its link target: photography.html#bench opens that photo.
+         To add a photo, put photos/NAME.jpg and photos/thumbs/NAME.jpg in the repo and copy a <figure>. -->
+    <div class="gallery">
+      <figure id="canal-boat"><button type="button"><img src="photos/thumbs/canal-boat.jpg" data-full="photos/canal-boat.jpg" width="900" height="549" alt="A boatman coils rope on a covered canal boat beneath cherry blossoms, seen from above"></button></figure>
+      <figure id="lanterns"><button type="button"><img src="photos/thumbs/lanterns.jpg" data-full="photos/lanterns.jpg" width="637" height="900" alt="A man in a suit walks past an izakaya hung with red paper lanterns at night"></button></figure>
+      <figure id="bench"><button type="button"><img src="photos/thumbs/bench.jpg" data-full="photos/bench.jpg" width="900" height="577" alt="Two older men talk on a bench while a crowd blurs past them"></button></figure>
+      <figure id="castle"><button type="button"><img src="photos/thumbs/castle.jpg" data-full="photos/castle.jpg" width="600" height="900" alt="A Japanese castle framed by cherry blossoms at dusk"></button></figure>
+      <figure id="crosswalk"><button type="button"><img src="photos/thumbs/crosswalk.jpg" data-full="photos/crosswalk.jpg" width="605" height="900" alt="A man on the phone crosses a striped crosswalk among white umbrellas, seen from above"></button></figure>
+      <figure id="yellow-train"><button type="button"><img src="photos/thumbs/yellow-train.jpg" data-full="photos/yellow-train.jpg" width="900" height="513" alt="A yellow train passes a railroad crossing behind blooming cherry trees"></button></figure>
+      <figure id="lion-gate"><button type="button"><img src="photos/thumbs/lion-gate.jpg" data-full="photos/lion-gate.jpg" width="600" height="900" alt="A woman stands beside the open mouth of a giant lion-head shrine in morning light"></button></figure>
+      <figure id="soba-stand"><button type="button"><img src="photos/thumbs/soba-stand.jpg" data-full="photos/soba-stand.jpg" width="592" height="900" alt="Two men eat at a steamy soba counter while cooks work behind it"></button></figure>
+      <figure id="waiting"><button type="button"><img src="photos/thumbs/waiting.jpg" data-full="photos/waiting.jpg" width="900" height="600" alt="An elderly man in a kimono leans on a cane on a sunlit train platform"></button></figure>
+      <figure id="bartender"><button type="button"><img src="photos/thumbs/bartender.jpg" data-full="photos/bartender.jpg" width="900" height="586" alt="A bartender seen through a gap in a bead curtain"></button></figure>
+      <figure id="lion-face"><button type="button"><img src="photos/thumbs/lion-face.jpg" data-full="photos/lion-face.jpg" width="900" height="600" alt="A giant carved lion face glaring through a gap between stalls"></button></figure>
+      <figure id="doorway"><button type="button"><img src="photos/thumbs/doorway.jpg" data-full="photos/doorway.jpg" width="565" height="900" alt="A man in a cap drinks at a narrow bar, seen through a doorway"></button></figure>
+      <figure id="moored-boats"><button type="button"><img src="photos/thumbs/moored-boats.jpg" data-full="photos/moored-boats.jpg" width="900" height="670" alt="Wooden tour boats moored on a canal under cherry trees"></button></figure>
+      <figure id="california"><button type="button"><img src="photos/thumbs/california.jpg" data-full="photos/california.jpg" width="576" height="900" alt="A man in a State of California jacket stands outside a restaurant with a price board"></button></figure>
+      <figure id="platform"><button type="button"><img src="photos/thumbs/platform.jpg" data-full="photos/platform.jpg" width="900" height="600" alt="An elderly man in a kimono and hat waits on a train platform"></button></figure>
+      <figure id="market"><button type="button"><img src="photos/thumbs/market.jpg" data-full="photos/market.jpg" width="600" height="900" alt="An older man in a blazer passes a market stall under hanging noren"></button></figure>
+      <figure id="bar-window"><button type="button"><img src="photos/thumbs/bar-window.jpg" data-full="photos/bar-window.jpg" width="578" height="900" alt="Two people at a glowing bar seen through a window with reflections"></button></figure>
+      <figure id="vendor"><button type="button"><img src="photos/thumbs/vendor.jpg" data-full="photos/vendor.jpg" width="589" height="900" alt="A masked market vendor in a white jacket, in sepia"></button></figure>
+      <figure id="photographers"><button type="button"><img src="photos/thumbs/photographers.jpg" data-full="photos/photographers.jpg" width="900" height="599" alt="Two older photographers shooting a city at night, in sepia"></button></figure>
+      <figure id="shamisen"><button type="button"><img src="photos/thumbs/shamisen.jpg" data-full="photos/shamisen.jpg" width="573" height="900" alt="A street musician in a straw hat plays the shamisen at night, in sepia"></button></figure>
+    </div>
+  </main>
+
+  <div class="viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <div class="viewer-bar">
+      <span class="pos"></span>
+      <span class="tools">
+        <button type="button" class="vbtn zout" aria-label="Zoom out">&minus;</button>
+        <button type="button" class="vbtn zoom-level" aria-label="Reset zoom">100%</button>
+        <button type="button" class="vbtn zin" aria-label="Zoom in">+</button>
+        <button type="button" class="vbtn close">Close</button>
+      </span>
+    </div>
+    <div class="viewer-stage">
+      <button type="button" class="vbtn nav prev" aria-label="Previous photo">&larr;</button>
+      <img alt="">
+      <button type="button" class="vbtn nav next" aria-label="Next photo">&rarr;</button>
+    </div>
+    <p class="viewer-caption"></p>
+  </div>
+
+  <footer>
+    <div class="wrap">Adrian Wang, 2026. <a href="index.html">Back to site</a></div>
+  </footer>
+
+  <script>
+    var figures = Array.prototype.slice.call(document.querySelectorAll(".gallery figure"));
+    var viewer = document.querySelector(".viewer");
+    var vImg = viewer.querySelector("img");
+    var vPos = viewer.querySelector(".pos");
+    var vCap = viewer.querySelector(".viewer-caption");
+    var current = -1, opener = null;
+    var total = String(figures.length).padStart(2, "0");
+    document.querySelector(".count").textContent = total + " photos";
+
+    function setHash(id) {
+      try { history.replaceState(null, "", id ? "#" + id : location.pathname); } catch (e) {}
+    }
+    function show(i) {
+      current = (i + figures.length) % figures.length;
+      var img = figures[current].querySelector("img");
+      resetZoom();
+      vImg.src = img.getAttribute("data-full");
+      vImg.alt = img.alt;
+      vCap.textContent = img.alt;
+      vPos.textContent = String(current + 1).padStart(2, "0") + " / " + total;
+      setHash(figures[current].id);
+    }
+    function open(i) {
+      opener = document.activeElement;
+      viewer.hidden = false;
+      viewer.classList.add("open");
+      document.body.style.overflow = "hidden";
+      show(i);
+      viewer.querySelector(".close").focus();
+    }
+    var stage = viewer.querySelector(".viewer-stage");
+    var levelBtn = viewer.querySelector(".zoom-level");
+    var MAX_ZOOM = 6;
+    var z = { s: 1, x: 0, y: 0 };
+
+    // Keep the photo from being dragged completely off screen
+    function clamp() {
+      var w = vImg.offsetWidth * z.s, h = vImg.offsetHeight * z.s;
+      var mx = Math.max(0, (w - stage.clientWidth) / 2);
+      var my = Math.max(0, (h - stage.clientHeight) / 2);
+      z.x = Math.min(mx, Math.max(-mx, z.x));
+      z.y = Math.min(my, Math.max(-my, z.y));
+    }
+    function apply(animate) {
+      clamp();
+      stage.classList.toggle("animate", !!animate);
+      stage.classList.toggle("zoomed", z.s > 1.001);
+      vImg.style.transform = "translate(" + z.x + "px," + z.y + "px) scale(" + z.s + ")";
+      levelBtn.textContent = Math.round(z.s * 100) + "%";
+    }
+    function resetZoom() { z.s = 1; z.x = 0; z.y = 0; apply(false); }
+    // Zoom to scale ns, keeping the point (cx, cy) (relative to the stage center) fixed
+    function zoomTo(ns, cx, cy, animate) {
+      ns = Math.min(MAX_ZOOM, Math.max(1, ns));
+      var k = ns / z.s;
+      z.x = cx - (cx - z.x) * k;
+      z.y = cy - (cy - z.y) * k;
+      z.s = ns;
+      if (ns === 1) { z.x = 0; z.y = 0; }
+      apply(animate);
+    }
+    function centerOf(e) {
+      var r = stage.getBoundingClientRect();
+      return { x: e.clientX - (r.left + r.width / 2), y: e.clientY - (r.top + r.height / 2) };
+    }
+
+    // Wheel / trackpad: scroll to zoom toward the cursor (pinch on a trackpad sends ctrl+wheel)
+    stage.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var c = centerOf(e);
+      var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      zoomTo(z.s * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0025)), c.x, c.y, false);
+    }, { passive: false });
+
+    // Drag to pan, two fingers to pinch
+    var pointers = {}, dragMoved = false, startDist = 0, startScale = 1, last = null;
+    function dist() {
+      var ids = Object.keys(pointers);
+      var a = pointers[ids[0]], b = pointers[ids[1]];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+    stage.addEventListener("pointerdown", function (e) {
+      if (e.target.closest(".nav")) return;
+      e.preventDefault();
+      stage.setPointerCapture(e.pointerId);
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      dragMoved = false;
+      if (Object.keys(pointers).length === 2) { startDist = dist(); startScale = z.s; }
+      last = { x: e.clientX, y: e.clientY };
+      if (z.s > 1.001) stage.classList.add("dragging");
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!pointers[e.pointerId]) return;
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var n = Object.keys(pointers).length;
+      if (n === 2) {
+        var ids = Object.keys(pointers), a = pointers[ids[0]], b = pointers[ids[1]];
+        var r = stage.getBoundingClientRect();
+        zoomTo(startScale * dist() / startDist,
+               (a.x + b.x) / 2 - (r.left + r.width / 2), (a.y + b.y) / 2 - (r.top + r.height / 2), false);
+        dragMoved = true;
+      } else if (n === 1 && z.s > 1.001) {
+        var dx = e.clientX - last.x, dy = e.clientY - last.y;
+        if (Math.abs(dx) + Math.abs(dy) > 0) dragMoved = true;
+        z.x += dx; z.y += dy;
+        apply(false);
+      } else if (Math.abs(e.clientX - last.x) + Math.abs(e.clientY - last.y) > 4) {
+        dragMoved = true;
+      }
+      last = { x: e.clientX, y: e.clientY };
+    });
+    function endPointer(e) {
+      delete pointers[e.pointerId];
+      stage.classList.remove("dragging");
+      var ids = Object.keys(pointers);
+      if (ids.length === 1) last = { x: pointers[ids[0]].x, y: pointers[ids[0]].y };
+    }
+    stage.addEventListener("pointerup", endPointer);
+    stage.addEventListener("pointercancel", endPointer);
+
+    // Double-click / double-tap toggles 1x and 2.5x
+    stage.addEventListener("dblclick", function (e) {
+      if (e.target.closest(".nav")) return;
+      var c = centerOf(e);
+      zoomTo(z.s > 1.001 ? 1 : 2.5, c.x, c.y, true);
+    });
+    viewer.querySelector(".zin").addEventListener("click", function () { zoomTo(z.s * 1.5, 0, 0, true); });
+    viewer.querySelector(".zout").addEventListener("click", function () { zoomTo(z.s / 1.5, 0, 0, true); });
+    levelBtn.addEventListener("click", function () { zoomTo(1, 0, 0, true); });
+    window.addEventListener("resize", function () { if (viewer.classList.contains("open")) apply(false); });
+    vImg.addEventListener("load", function () { apply(false); });
+
+    function close() {
+      resetZoom();
+      viewer.classList.remove("open");
+      viewer.hidden = true;
+      document.body.style.overflow = "";
+      var fig = figures[current];
+      setHash("");
+      if (fig) fig.querySelector("button").focus({ preventScroll: true });
+      else if (opener) opener.focus();
+    }
+
+    figures.forEach(function (fig, i) {
+      fig.querySelector("button").addEventListener("click", function () { open(i); });
+    });
+    viewer.querySelector(".close").addEventListener("click", close);
+    viewer.querySelector(".prev").addEventListener("click", function () { show(current - 1); });
+    viewer.querySelector(".next").addEventListener("click", function () { show(current + 1); });
+    viewer.addEventListener("click", function (e) {
+      // Clicking the empty backdrop closes, but not at the end of a drag
+      if (dragMoved) { dragMoved = false; return; }
+      if (e.target === viewer || (e.target === stage && z.s <= 1.001)) close();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!viewer.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      var zoomed = z.s > 1.001, step = 80;
+      if (e.key === "ArrowLeft") { if (zoomed) { z.x += step; apply(true); } else show(current - 1); }
+      if (e.key === "ArrowRight") { if (zoomed) { z.x -= step; apply(true); } else show(current + 1); }
+      if (e.key === "ArrowUp" && zoomed) { z.y += step; apply(true); e.preventDefault(); }
+      if (e.key === "ArrowDown" && zoomed) { z.y -= step; apply(true); e.preventDefault(); }
+      if (e.key === "+" || e.key === "=") zoomTo(z.s * 1.5, 0, 0, true);
+      if (e.key === "-" || e.key === "_") zoomTo(z.s / 1.5, 0, 0, true);
+      if (e.key === "0") zoomTo(1, 0, 0, true);
+    });
+
+    // A link like photography.html#bench opens straight to that photo
+    function openFromHash() {
+      var id = decodeURIComponent(location.hash.slice(1));
+      if (!id) return;
+      var i = figures.findIndex(function (f) { return f.id === id; });
+      if (i < 0) return;
+      figures[i].classList.add("target");
+      figures[i].scrollIntoView({ block: "center" });
+      open(i);
+    }
+    openFromHash();
+
+    // Photos start as negatives and develop when they scroll into view
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+      var darkroom = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var img = entry.target;
+            setTimeout(function () { img.classList.remove("negative"); }, 300);
+            darkroom.unobserve(img);
+          }
+        });
+      }, { threshold: 0.4 });
+      figures.forEach(function (fig) {
+        if (location.hash.slice(1) === fig.id) return;
+        var img = fig.querySelector("img");
+        img.classList.add("negative");
+        darkroom.observe(img);
+      });
+    }
+  </script>
+</body>
+</html>
