@@ -436,6 +436,7 @@
       border: 1px solid var(--border);
     }
     .frame img { display: block; width: 100%; height: auto; }
+    .frame video { display: block; width: 100%; height: auto; }
     .frame::after {
       --c: var(--mint);
       --len: 22px;
@@ -1077,7 +1078,7 @@
               </div>
             </details>
           </li>
-          <li><a href="https://github.com/adrian-wang-git">GitHub</a></li>
+          <li><a href="https://github.com/adrian-y-wang">GitHub</a></li>
           <li><a href="https://www.linkedin.com/in/adrian-y-wang">LinkedIn</a></li>
           <li>
             <details class="email-menu">
@@ -1114,15 +1115,17 @@
             <dt>Detects</dt><dd>Raised, lowered, and neutral brows</dd>
           </dl>
           <div class="project-links">
-            <a href="https://github.com/adrian-wang-git/ASL-eyebrow-tracking">Source code</a>
-            <a href="https://github.com/adrian-wang-git/ASL-eyebrow-tracking#readme">Read the write-up</a>
+            <a href="https://github.com/adrian-y-wang/ASL-eyebrow-tracking">Source code</a>
+            <a href="https://github.com/adrian-y-wang/ASL-eyebrow-tracking#readme">Read the write-up</a>
           </div>
           </div>
           <div class="project-media">
-          <!-- TODO: record a short GIF of the label changing, save it as images/asl-tracker.gif,
-               then replace this placeholder div with:
-               <figure class="frame"><img src="images/asl-tracker.gif" alt="Webcam view with eyebrow landmarks and a RAISED label"></figure> -->
-          <div class="frame placeholder">screenshot or GIF goes here<br>images/asl-tracker.gif</div>
+          <figure class="frame demo">
+            <video autoplay muted loop playsinline preload="metadata" poster="images/asl-tracker-poster.jpg" aria-label="Demo: the tracker draws dots along the eyebrows, shows the five brow scores, and labels each frame raised, neutral, or lowered">
+              <source src="images/asl-tracker.webm" type="video/webm">
+              <source src="images/asl-tracker.mp4" type="video/mp4">
+            </video>
+          </figure>
 
           <pre class="run"><code><span class="l"><span class="p">$ </span>pip install -r requirements.txt</span><span class="l"><span class="p">$ </span>python brows.py</span></code></pre>
           </div>
@@ -1141,8 +1144,7 @@
             <dt>Presented</dt><dd>Teen Academic Linguistics Conference (TALC)</dd>
           </dl>
           <div class="project-links">
-            <!-- TODO: link the paper once it's published, or delete this line -->
-            <a href="PAPER-LINK">Read the paper</a>
+            <a href="https://www.curieuxacademicjournal.com/_files/ugd/99711c_f696fec5cdaa48fa87f484dfaeed5a34.pdf" target="_blank" rel="noopener">Read the paper (PDF)</a>
           </div>
           </div>
         </article>
@@ -1295,7 +1297,7 @@
     <section id="contact" aria-labelledby="contact-title">
       <h2 id="contact-title"><button class="panel-toggle" aria-expanded="true" aria-controls="contact-body"><span class="label"><span class="name">Contact</span></span></button></h2>
       <div class="panel-body" id="contact-body">
-        <p>The best way to reach me is by email: <a href="mailto:aw956@cornell.edu">aw956@cornell.edu</a> for school, or <a href="mailto:adrianwangcb@gmail.com">adrianwangcb@gmail.com</a> for anything else. I'm also on <a href="https://www.linkedin.com/in/adrian-y-wang">LinkedIn</a>, and my code is on <a href="https://github.com/adrian-wang-git">GitHub</a>.</p>
+        <p>The best way to reach me is by email: <a href="mailto:aw956@cornell.edu">aw956@cornell.edu</a> for school, or <a href="mailto:adrianwangcb@gmail.com">adrianwangcb@gmail.com</a> for anything else. I'm also on <a href="https://www.linkedin.com/in/adrian-y-wang">LinkedIn</a>, and my code is on <a href="https://github.com/adrian-y-wang">GitHub</a>.</p>
       </div>
     </section>
 
@@ -1303,7 +1305,7 @@
 
   <footer>
     <div class="wrap">
-      Adrian Wang, 2026. <a href="https://github.com/adrian-wang-git/adrian-wang-git.github.io">Source</a>
+      Adrian Wang, 2026. <a href="https://github.com/adrian-y-wang/adrian-y-wang.github.io">Source</a>
     </div>
   </footer>
 
@@ -1382,6 +1384,9 @@
     });
 
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) document.querySelectorAll("video[autoplay]").forEach(function (v) {
+      v.removeAttribute("autoplay"); v.pause(); v.setAttribute("controls", "");
+    });
 
     if (!reduceMotion) {
       document.documentElement.classList.add("animate");

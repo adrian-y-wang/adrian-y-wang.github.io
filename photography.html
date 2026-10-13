@@ -124,8 +124,10 @@
       inset: 0;
       z-index: 100;
       display: none;
-      grid-template-rows: auto 1fr auto;
-      background: rgba(1, 4, 3, 0.99);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      height: 100vh;
+      height: 100dvh;
+      background: var(--deep);
     }
     .viewer.open { display: grid; }
     .viewer-bar {
@@ -148,7 +150,11 @@
     }
     .viewer-stage img {
       max-width: 100%;
-      max-height: 100%;
+      /* Fit the whole photo on screen: full height minus the top bar and caption */
+      max-height: calc(100vh - 8.5rem);
+      max-height: calc(100dvh - 8.5rem);
+      width: auto;
+      height: auto;
       object-fit: contain;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     }
@@ -186,7 +192,9 @@
       .gallery { columns: 2; column-gap: 6px; }
       .gallery figure { margin-bottom: 6px; }
       .viewer-stage { padding: 0 0.5rem; }
+      .viewer-stage img { max-height: calc(100dvh - 11rem); }
       .nav { top: auto; bottom: -3.25rem; transform: none; }
+      .viewer-caption { padding-left: 3.75rem; padding-right: 3.75rem; }
     }
     @media (prefers-reduced-motion: reduce) {
       .gallery img, .gallery button::after { transition: none; }
