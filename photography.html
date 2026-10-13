@@ -331,6 +331,7 @@
     }
     var stage = viewer.querySelector(".viewer-stage");
     var levelBtn = viewer.querySelector(".zoom-level");
+    var MIN_ZOOM = 0.3;
     var MAX_ZOOM = 6;
     var z = { s: 1, x: 0, y: 0 };
 
@@ -342,17 +343,20 @@
       z.x = Math.min(mx, Math.max(-mx, z.x));
       z.y = Math.min(my, Math.max(-my, z.y));
     }
+    function canPan() {
+      return vImg.offsetWidth * z.s > stage.clientWidth + 1 || vImg.offsetHeight * z.s > stage.clientHeight + 1;
+    }
     function apply(animate) {
       clamp();
       stage.classList.toggle("animate", !!animate);
-      stage.classList.toggle("zoomed", z.s > 1.001);
+      stage.classList.toggle("zoomed", canPan());
       vImg.style.transform = "translate(" + z.x + "px," + z.y + "px) scale(" + z.s + ")";
       levelBtn.textContent = Math.round(z.s * 100) + "%";
     }
     function resetZoom() { z.s = 1; z.x = 0; z.y = 0; apply(false); }
     // Zoom to scale ns, keeping the point (cx, cy) (relative to the stage center) fixed
     function zoomTo(ns, cx, cy, animate) {
-      ns = Math.min(MAX_ZOOM, Math.max(1, ns));
+      ns = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, ns));
       var k = ns / z.s;
       z.x = cx - (cx - z.x) * k;
       z.y = cy - (cy - z.y) * k;
@@ -373,8 +377,9 @@
       zoomTo(z.s * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0025)), c.x, c.y, false);
     }, { passive: false });
 
-    // Drag to pan, two fingers to pinch
-    var pointers = {}, dragMoved = false, startDist = 0, startScale = 1, last = null;
+    // Drag to pan; two pointers pinch to zoom. Pointer capture keeps dragging
+    // responsive even when the pointer leaves the image or stage.
+    var pointers = Object.create(null), startDist = 0, startScale = 1, last = null;
     function dist() {
       var ids = Object.keys(pointers);
       var a = pointers[ids[0]], b = pointers[ids[1]];
@@ -383,30 +388,28 @@
     stage.addEventListener("pointerdown", function (e) {
       if (e.target.closest(".nav")) return;
       e.preventDefault();
-      stage.setPointerCapture(e.pointerId);
+      try { stage.setPointerCapture(e.pointerId); } catch (_) {}
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
-      dragMoved = false;
-      if (Object.keys(pointers).length === 2) { startDist = dist(); startScale = z.s; }
-      last = { x: e.clientX, y: e.clientY };
-      if (z.s > 1.001) stage.classList.add("dragging");
+      var ids = Object.keys(pointers);
+      if (ids.length === 2) { startDist = Math.max(1, dist()); startScale = z.s; last = null; }
+      else last = { x: e.clientX, y: e.clientY };
+      if (canPan()) stage.classList.add("dragging");
     });
     stage.addEventListener("pointermove", function (e) {
       if (!pointers[e.pointerId]) return;
+      var previous = { x: pointers[e.pointerId].x, y: pointers[e.pointerId].y };
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
-      var n = Object.keys(pointers).length;
-      if (n === 2) {
-        var ids = Object.keys(pointers), a = pointers[ids[0]], b = pointers[ids[1]];
+      var ids = Object.keys(pointers);
+      if (ids.length >= 2) {
+        var a = pointers[ids[0]], b = pointers[ids[1]];
         var r = stage.getBoundingClientRect();
         zoomTo(startScale * dist() / startDist,
-               (a.x + b.x) / 2 - (r.left + r.width / 2), (a.y + b.y) / 2 - (r.top + r.height / 2), false);
-        dragMoved = true;
-      } else if (n === 1 && z.s > 1.001) {
-        var dx = e.clientX - last.x, dy = e.clientY - last.y;
-        if (Math.abs(dx) + Math.abs(dy) > 0) dragMoved = true;
-        z.x += dx; z.y += dy;
+          (a.x + b.x) / 2 - (r.left + r.width / 2),
+          (a.y + b.y) / 2 - (r.top + r.height / 2), false);
+      } else if (ids.length === 1 && canPan()) {
+        z.x += e.clientX - previous.x;
+        z.y += e.clientY - previous.y;
         apply(false);
-      } else if (Math.abs(e.clientX - last.x) + Math.abs(e.clientY - last.y) > 4) {
-        dragMoved = true;
       }
       last = { x: e.clientX, y: e.clientY };
     });
@@ -414,10 +417,13 @@
       delete pointers[e.pointerId];
       stage.classList.remove("dragging");
       var ids = Object.keys(pointers);
-      if (ids.length === 1) last = { x: pointers[ids[0]].x, y: pointers[ids[0]].y };
+      if (ids.length === 1) {
+        var p = pointers[ids[0]]; last = { x: p.x, y: p.y };
+      } else last = null;
     }
     stage.addEventListener("pointerup", endPointer);
     stage.addEventListener("pointercancel", endPointer);
+    stage.addEventListener("lostpointercapture", endPointer);
 
     // Double-click / double-tap toggles 1x and 2.5x
     stage.addEventListener("dblclick", function (e) {
