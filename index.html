@@ -1050,6 +1050,44 @@
     .project-text > h3 { font-size: calc(1.2rem + 3pt); }
     .project-text > p { font-size: calc(1rem + 3pt); line-height: 1.5; }
 
+    /* Headshot beside the name, framed with the same crop brackets as the screenshots */
+    .intro .intro-head { display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 2rem); margin-bottom: 1.25rem; }
+    .intro .intro-head h1 { margin: 0; min-width: 0; }
+    .portrait {
+      position: relative;
+      flex: 0 0 auto;
+      width: clamp(6rem, 11vw, 10.5rem);
+      aspect-ratio: 1;
+      margin: 0;
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
+    .portrait img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+    .portrait::after {
+      --c: var(--mint);
+      --len: 16px;
+      --w: 3px;
+      content: "";
+      position: absolute;
+      inset: 8px;
+      pointer-events: none;
+      background:
+        linear-gradient(var(--c), var(--c)) top left / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) top left / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) top right / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) top right / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) bottom left / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--len),
+        linear-gradient(var(--c), var(--c)) bottom right / var(--len) var(--w),
+        linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--len);
+      background-repeat: no-repeat;
+    }
+    @media (max-width: 560px) {
+      .portrait { width: 5.5rem; }
+    }
+
     /* Let text and divider lines run the full width of each section */
     .log li > div { max-width: none; }
     .panel-body > p, .plain li, .hobbies p { max-width: none; }
@@ -1113,7 +1151,12 @@
 
         <div class="intro-grid">
         <div class="intro-text">
-        <h1>Adrian Wang<span class="cursor" aria-hidden="true"></span></h1>
+        <div class="intro-head">
+          <figure class="portrait">
+            <img src="images/headshot.jpg" alt="Portrait of Adrian Wang in a dark suit and blue tie" width="400" height="400">
+          </figure>
+          <h1>Adrian Wang<span class="cursor" aria-hidden="true"></span></h1>
+        </div>
         <p>I study Computer Science and Linguistics at Cornell University ('30). I'm especially interested in Computational Linguistics and NLP, and my background is rooted in linguistics: I speak English, Spanish, and Mandarin, and I'm learning ASL.</p>
         <p class="goal">I'm looking to sharpen my Computational Linguistics skills through project teams and internship opportunities, especially in NLP-related and community-based work.</p>
 
