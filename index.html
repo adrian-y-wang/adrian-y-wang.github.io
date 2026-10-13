@@ -76,7 +76,7 @@
       min-height: 3.25rem;
       flex-wrap: wrap;
       font-family: var(--mono);
-      font-size: 0.9rem;
+      font-size: clamp(1rem, 1.2vw, 1.2rem);
     }
     .topbar .name { color: var(--text); font-weight: 700; text-decoration: none; }
     .topbar nav { display: flex; gap: 1.1rem; flex-wrap: wrap; }
@@ -678,38 +678,20 @@
       }
       .project-text + .project-media { margin-top: 0; }
 
-      /* ASL project: balanced columns with matching outer heights. Give the description
-         slightly more width, while the demo expands only into space the text column needs. */
-      .project.feature {
-        align-items: stretch;
-        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-        gap: clamp(1.25rem, 2.2vw, 2.5rem);
-      }
+      /* ASL project: two columns of equal height. Text on the left with its links pinned to the
+         bottom; demo video fills the right, with the command block tucked underneath. */
+      .project.feature { align-items: stretch; grid-template-columns: 1fr 1fr; }
       .project.feature .project-text,
-      .project.feature .project-media {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        min-height: 0;
-      }
-      .project.feature .project-text > p { margin: 0.45rem 0 0.85rem; }
-      .project.feature .project-text .meta { margin-bottom: 0.85rem; }
+      .project.feature .project-media { display: flex; flex-direction: column; min-width: 0; }
+      .project.feature .project-text > p { margin: 0.6rem 0 1.1rem; }
+      .project.feature .project-text .meta { margin-bottom: 1.1rem; }
       .project.feature .project-links {
         margin-top: auto;
-        padding-top: 0.75rem;
+        padding-top: 1rem;
         border-top: 1px solid var(--border);
       }
-      .project.feature .project-media .frame {
-        flex: 0 0 auto;
-        width: 100%;
-        aspect-ratio: 646 / 500;
-        min-height: 0;
-        margin: 0 0 0.75rem;
-      }
-      .project.feature .project-media .run {
-        flex: 0 0 auto;
-        margin: 0;
-      }
+      .project.feature .project-media .frame { flex: 1 1 auto; margin: 0 0 1rem; }
+      .project.feature .project-media .run { margin: 0; }
       .panel-body { padding: clamp(1.4rem, 2.4vw, 2.6rem); }
       .panel-toggle { padding-left: clamp(1.4rem, 2.4vw, 2.6rem); padding-right: clamp(1.4rem, 2.4vw, 2.6rem); }
     }
@@ -728,16 +710,6 @@
     @media (min-width: 900px) and (max-width: 1100px) {
       .intro-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 2rem; }
       .crop { padding-left: 2.25rem; padding-right: 2.25rem; }
-    }
-
-    /* Mid-sized screens: keep both columns usable without squeezing the text. */
-    @media (min-width: 700px) and (max-width: 1050px) {
-      .project.feature { grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr); gap: 1.25rem; }
-      .project.feature .project-text > p { line-height: 1.5; }
-      .project.feature .project-media .frame {
-        aspect-ratio: 646 / 500;
-        min-height: 0;
-      }
     }
 
     /* ---------- Hobbies: text with a small portfolio preview window ---------- */
@@ -1062,7 +1034,24 @@
       .topbar nav a { white-space: nowrap; padding: 0.2rem 0; }
       section { scroll-margin-top: 5.5rem; }
     }
-  </style>
+  
+    /* Larger top navigation bar */
+    .topbar .wrap {
+      min-height: clamp(4rem, 6vw, 5rem);
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
+      font-size: clamp(1rem, 1.2vw, 1.2rem);
+    }
+    .topbar .name { font-size: 1.12em; }
+    @media (max-width: 560px) {
+      .topbar .wrap {
+        min-height: 3.75rem;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .topbar .name { font-size: 1.05em; }
+    }
+</style>
 </head>
 <body>
 
@@ -1118,7 +1107,7 @@
             <span class="pos">PRON</span><span class="pos">NOUN</span><span class="pos">PRON</span>
           </div>
           <figcaption><q>Are you a student?</q> The signs alone could be a statement. Raised brows held across them make it a yes/no question.
-            <span class="source">Example from my paper, <a href="#lag">Layered ASL Gloss (LAG)</a>.</span></figcaption>
+            <span class="source">Example from my paper, <a href="index.html#lag">Layered ASL Gloss (LAG)</a>.</span></figcaption>
         </figure>
         </div>
         </div>
